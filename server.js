@@ -1,28 +1,38 @@
-const WebSocket = require('ws');
+const http = require('http');
+const ws = require('ws');
 
-// Create a WebSocket server
-const wss = new WebSocket.Server({ port: 8080 });
+const wss = new ws.Server({ noServer: true });
+const clients = new Set();
 
-wss.on('connection', (ws) => {
-    console.log('New client connected');
-
-    // Broadcast received messages to all clients
-    ws.on('message', (message) => {
-        const data = JSON.parse(message);
-        const payload = JSON.stringify({
-            username: data.username,
-            message: data.message,
-        });
-        wss.clients.forEach((client) => {
-            if (client.readyState === WebSocket.OPEN) {
-                client.send(payload);
-            }
-        });
-    });
-
-    ws.on('close', () => {
-        console.log('Client disconnected');
-    });
+http.createServer((req, res) => {
+    wss.handleUpgrade(req, req.socket, Buffer.alloc(0), onSocketConnect);
+}).listen(8080, () => {
+    console.log('Server is running on http://localhost:8080');
 });
 
-console.log('WebSocket server running on ws://localhost:8080');
+function onSocketConnect(ws) {
+    clients.add(ws);
+
+    ws.on('message', function (message) {
+        try {
+            // Parse the incoming JSON message
+            const data = JSON.parse(message);
+
+            // Limit message length to 50 characters
+            const trimmedMessage = data.message.slice(0, 50);
+
+            // Broadcast to all connected clients
+            for (let client of clients) {
+                if (client.readyState === ws.OPEN) {
+                    client.send(JSON.stringify({ username: data.username, message: trimmedMessage }));
+                }
+            }
+        } catch (error) {
+            console.error('Error processing message:', error);
+        }
+    });
+
+    ws.on('close', function () {
+        clients.delete(ws);
+    });
+}

@@ -1,21 +1,12 @@
 {
   "name": "websocket-chat-app",
   "version": "1.0.0",
-  "description": "A simple chat application using WebSockets in Node.js",
+  "description": "A WebSocket chat app using ws and an HTTP server",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
-  "author": "Your Name",
-  "license": "MIT",
   "dependencies": {
     "ws": "^8.12.0"
-  },
-  "devDependencies": {},
-  "keywords": [
-    "websocket",
-    "chat",
-    "nodejs",
-    "real-time"
-  ]
+  }
 }
